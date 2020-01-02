@@ -44,6 +44,7 @@ router.get('/meals', auth, async (req, res) => {
         await req.user.populate('meals').execPopulate()
 
         if (req.query.month) {
+            let calories = 0
             let filteredArr = req.user.meals.filter((meal) => {
                 return parseInt(req.query.month) === meal.createdAt.getMonth() + 1
             })
@@ -51,7 +52,12 @@ router.get('/meals', auth, async (req, res) => {
                 let timeArr = filteredArr.filter((meal) => {
                     return req.query.time === meal.mealType
                 })
-                req.user.meals = timeArr
+                
+                timeArr.forEach((meal) => {
+                    return calories += meal.calories
+                })
+                res.send({calories})
+                // req.user.meals = timeArr
             }
 
         }
