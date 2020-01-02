@@ -35,7 +35,7 @@ router.post('/meals', auth, async (req, res) => {
 // GET /meals?time=launch
 router.get('/meals', auth, async (req, res) => {
     try {
-        const date = new Date(Date.now())
+        const date = new Date(Date.now()).getDate()
 
         if (req.user.userType === 'manager') {
             throw new Error('Unauthorized')
@@ -54,6 +54,23 @@ router.get('/meals', auth, async (req, res) => {
                 req.user.meals = timeArr
             }
 
+        }
+
+        if (req.query.expected) {
+            let calories = 0
+            let filteredArr = req.user.meals.filter((meal) => {
+                return meal.createdAt.getDate() == date 
+            })
+
+            filteredArr.forEach((meal) => {
+                return calories += meal.calories 
+            })
+            
+            if (calories >= parseInt(req.query.expected)) {
+                return res.send({status: 'RED'})
+            }
+
+            res.send({status: 'GREEN'})
         }
         
         res.send(req.user.meals)
