@@ -11,8 +11,7 @@ const mealSchema = new mongoose.Schema ({
         required: true
     },
     mealType: {
-        type: String,
-        default: null
+        type: String
     },
     owner: {
         type: mongoose.Schema.Types.ObjectId,

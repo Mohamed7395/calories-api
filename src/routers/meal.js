@@ -31,57 +31,61 @@ router.post('/meals', auth, async (req, res) => {
 })
 
 // Read meals
-// Get /meals?month=11
-// GET /meals?time=launch
+// GET /meals?date=2019,12,28,2020,1,2,breakfast
+// GET /meals?expected=300
 router.get('/meals', auth, async (req, res) => {
     try {
-        const date = new Date(Date.now()).getDate()
-
         if (req.user.userType === 'manager') {
             throw new Error('Unauthorized')
         }
 
         await req.user.populate('meals').execPopulate()
 
-        if (req.query.month) {
+        if (req.query.date) {
             let calories = 0
-            let filteredArr = req.user.meals.filter((meal) => {
-                return parseInt(req.query.month) === meal.createdAt.getMonth() + 1
+            const dateArr = req.query.date.split(',')
+            const year1 = dateArr[0]
+            const month1 = parseInt(dateArr[1]) - 1
+            const day1 = dateArr[2]
+            const year2 = dateArr[3]
+            const month2 = parseInt(dateArr[4]) - 1
+            const day2 = dateArr[5]
+            const type = dateArr[6]
+
+            const from = new Date(new Date().setFullYear(year1,month1,day1))
+            const to = new Date(new Date().setFullYear(year2,month2,day2))
+
+            const meals = req.user.meals.filter((meal) => {
+                return meal.mealType === type && to > meal.createdAt && from <= meal.createdAt
             })
-            if (req.query.time) {
-                let timeArr = filteredArr.filter((meal) => {
-                    return req.query.time === meal.mealType
-                })
-                
-                timeArr.forEach((meal) => {
-                    return calories += meal.calories
-                })
-                res.send({calories})
-                // req.user.meals = timeArr
-            }
+
+            meals.forEach((meal) => {
+                return calories += meal.calories
+            })
+            return res.send({ calories })
 
         }
 
         if (req.query.expected) {
             let calories = 0
             let filteredArr = req.user.meals.filter((meal) => {
-                return meal.createdAt.getDate() == date 
+                return meal.createdAt.getDate() == date
             })
 
             filteredArr.forEach((meal) => {
-                return calories += meal.calories 
+                return calories += meal.calories
             })
-            
+
             if (calories >= parseInt(req.query.expected)) {
-                return res.send({status: 'RED'})
+                return res.send({ status: 'RED' })
             }
 
-            res.send({status: 'GREEN'})
+            res.send({ status: 'GREEN' })
         }
-        
+
         res.send(req.user.meals)
     } catch (e) {
-    res.status(400).send({ error: e.message })
+        res.status(400).send({ error: e.message })
     }
 })
 
